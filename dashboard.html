@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LockedIn | Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'><path d='M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>">
+    
+    <!-- Google Fonts - Professional Modern Stack -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --primary: #3b82f6; 
+            --primary-dark: #2563eb;
+            --primary-light: #eff6ff;
+            --accent: #8b5cf6;
+            --accent-light: #f5f3ff;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --bg: #f8fafc; 
+            --sidebar: #ffffff; 
+            --text-main: #1e293b; 
+            --text-muted: #64748b;
+            --font-logo: 'Sora', sans-serif;
+            --font-heading: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-body); }
+        body { background: var(--bg); color: var(--text-main); display: flex; position: relative; overflow-x: hidden; }
+        
+        /* Background decoration */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -10%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -30%;
+            left: -15%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .sidebar { 
+            width: 280px; 
+            height: 100vh; 
+            background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.98) 100%);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(226, 232, 240, 0.8);
+            position: fixed; 
+            padding: 28px 0; 
+            display: flex; 
+            flex-direction: column;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.03);
+            z-index: 100;
+        }
+        
+        /* Updated Logo with gradient */
+        .sidebar-logo-link {
+            text-decoration: none;
+            padding: 0 24px 28px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-bottom: 1px solid rgba(241, 245, 249, 0.8);
+            margin-bottom: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .sidebar-logo-link::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 24px;
+            right: 24px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+        .sidebar-logo-link:hover::after {
+            transform: scaleX(1);
+        }
+        .sidebar-logo-link:hover .logo-icon-wrap {
+            transform: scale(1.05) rotate(-5deg);
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+        }
+        .sidebar-logo-link:hover .logo-icon-wrap i {
+            color: white;
+        }
+        .logo-icon-wrap {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #eff6ff, #f0f9ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        .logo-icon-wrap i {
+            font-size: 22px;
+            color: var(--primary);
+            transition: all 0.4s;
+        }
+        .logo-text {
+            font-family: var(--font-logo);
+            font-weight: 800;
+            font-size: 24px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }
+        
+        .sidebar ul { list-style: none; flex: 1; padding: 0 12px; }
+        .sidebar ul li { 
+            padding: 14px 20px; 
+            margin: 4px 0; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            color: var(--text-muted); 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500; 
+            font-size: 14px;
+            position: relative;
+        }
+        .sidebar ul li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 0;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            border-radius: 0 4px 4px 0;
+            transition: height 0.3s;
+        }
+        .sidebar ul li:hover, .sidebar ul li.active { 
+            background: linear-gradient(135deg, var(--primary-light), rgba(239, 246, 255, 0.5));
+            color: var(--primary);
+            transform: translateX(4px);
+        }
+        .sidebar ul li.active::before {
+            height: 60%;
+        }
+        .logout-btn { 
+            margin: 0 20px 20px; 
+            padding: 14px 24px; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            color: #dc2626; 
+            transition: all 0.3s; 
+            font-weight: 600; 
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border: none; 
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1);
+        }
+        .logout-btn:hover { 
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+        }
+        
+        .main-content { margin-left: 280px; flex: 1; padding: 40px; max-width: 1400px; position: relative; z-index: 1; }
+        .header-path { 
+            font-size: 13px; 
+            color: var(--text-muted); 
+            margin-bottom: 32px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            font-weight: 500;
+            padding: 12px 20px;
+            background: white;
+            border-radius: 12px;
+            width: fit-content;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        .card { 
+            background: white; 
+            border-radius: 20px; 
+            border: 1px solid rgba(241, 245, 249, 0.8);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .card:hover::before {
+            opacity: 1;
+        }
+        .card:hover {
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+        .tab-pane { display: none; animation: fadeIn 0.4s ease; }
+        .tab-pane.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .welcome-hero { 
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white; 
+            border-radius: 24px; 
+            padding: 40px; 
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3);
+        }
+        .welcome-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .welcome-hero::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .welcome-hero h1 { 
+            font-family: var(--font-heading); 
+            font-size: 36px; 
+            margin-bottom: 12px; 
+            font-weight: 700; 
+            letter-spacing: -0.5px;
+            position: relative;
+            z-index: 1;
+        }
+        .welcome-hero p { 
+            font-size: 16px; 
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 32px; }
+        .stat-card { 
+            background: white; 
+            padding: 24px; 
+            border-radius: 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 18px;
+            border: 1px solid rgba(241, 245, 249, 0.8);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 0;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            transition: height 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+        }
+        .stat-card:hover::before {
+            height: 100%;
+        }
+        .stat-card h3 { 
+            font-family: var(--font-heading); 
+            font-weight: 700; 
+            font-size: 32px; 
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text-main), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-card p { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-icon { 
+            width: 56px; 
+            height: 56px; 
+            border-radius: 16px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; margin-top: 24px; }
+        .note-card, .sub-card { 
+            background: white; 
+            padding: 28px; 
+            border-radius: 20px; 
+            text-align: center; 
+            border: 1px solid rgba(241, 245, 249, 0.8);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .note-card::after, .sub-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+        .note-card:hover, .sub-card:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
+        }
+        .note-card:hover::after, .sub-card:hover::after {
+            transform: scaleX(1);
+        }
+        .note-card h3, .sub-card h3 { 
+            font-family: var(--font-heading); 
+            font-weight: 600; 
+            font-size: 18px; 
+            letter-spacing: -0.3px;
+            margin: 12px 0;
+        }
+        
+        .upload-card { 
+            background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+            border: 2px dashed var(--primary); 
+            cursor: pointer; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 240px;
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+        .upload-card:hover { 
+            background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(59, 130, 246, 0.15);
+        }
+        .upload-card h3 { font-family: var(--font-heading); font-weight: 600; letter-spacing: -0.3px; }
+        .upload-icon { font-size: 56px; margin-bottom: 16px; }
+        
+        .activity-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+            padding: 18px; 
+            border-bottom: 1px solid rgba(248, 250, 252, 0.8);
+            transition: all 0.2s;
+        }
+        .activity-item:hover {
+            background: rgba(239, 246, 255, 0.3);
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-item p { font-size: 14px; }
+        .activity-icon { 
+            width: 42px; 
+            height: 42px; 
+            border-radius: 12px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .profile-header { display: flex; align-items: center; gap: 28px; margin-bottom: 32px; }
+        .profile-header h2 { font-family: var(--font-heading); font-weight: 700; font-size: 28px; letter-spacing: -0.5px; }
+        .profile-pic { 
+            width: 110px; 
+            height: 110px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            border: 4px solid white; 
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { 
+            font-weight: 600; 
+            margin-bottom: 8px; 
+            display: block; 
+            font-size: 13px;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input, textarea { 
+            width: 100%; 
+            padding: 14px 16px; 
+            border-radius: 12px; 
+            border: 2px solid #e2e8f0; 
+            background: #f8fafc; 
+            margin-top: 5px; 
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+        select { 
+            width: 100%; 
+            padding: 14px 16px; 
+            border-radius: 12px; 
+            border: 2px solid #e2e8f0; 
+            background: #f8fafc; 
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white; 
+            border: none; 
+            padding: 14px 28px; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        .btn-primary:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); }
+        .modal.active { display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s; }
+        .modal-content { 
+            background: white; 
+            border-radius: 24px; 
+            padding: 36px; 
+            max-width: 540px; 
+            width: 90%; 
+            max-height: 90vh; 
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        .modal-header h2 { 
+            font-size: 24px; 
+            font-family: var(--font-heading); 
+            font-weight: 700; 
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .close-btn { 
+            background: rgba(241, 245, 249, 0.5);
+            border: none; 
+            font-size: 24px; 
+            cursor: pointer; 
+            color: var(--text-muted);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .close-btn:hover { 
+            background: rgba(226, 232, 240, 0.8);
+            color: var(--text-main);
+            transform: rotate(90deg);
+        }
+        
+        .file-upload-area { 
+            border: 3px dashed #cbd5e1;
+            border-radius: 16px; 
+            padding: 48px; 
+            text-align: center; 
+            margin: 24px 0; 
+            cursor: pointer; 
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        }
+        .file-upload-area:hover { 
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary-light), #f0f9ff);
+            transform: translateY(-2px);
+        }
+        .file-upload-area.drag-over { 
+            border-color: var(--primary);
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+        .file-upload-area p { font-size: 14px; }
+        
+        .spinner { 
+            border: 3px solid #f3f3f3; 
+            border-top: 3px solid var(--primary);
+            border-radius: 50%; 
+            width: 40px; 
+            height: 40px; 
+            animation: spin 1s linear infinite; 
+            margin: 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); }
+        .empty-state-icon { font-size: 72px; margin-bottom: 20px; opacity: 0.4; }
+        
+        .history-item { 
+            padding: 20px; 
+            border-left: 4px solid var(--primary);
+            background: linear-gradient(90deg, rgba(239, 246, 255, 0.5), transparent);
+            border-radius: 12px; 
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+        .history-item:hover {
+            background: linear-gradient(90deg, rgba(239, 246, 255, 0.8), transparent);
+            transform: translateX(4px);
+        }
+        .history-item strong { font-weight: 600; }
+        .history-time { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+        
+        .note-actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; font-size: 18px; }
+        .nav-icon { width: 20px; text-align: center; flex-shrink: 0; }
+        .sub-icon-wrap { 
+            width: 72px; 
+            height: 72px; 
+            border-radius: 18px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin: 0 auto 18px; 
+            font-size: 32px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+        .note-actions span { 
+            cursor: pointer; 
+            padding: 8px; 
+            border-radius: 8px; 
+            transition: all 0.2s;
+        }
+        .note-actions span:hover { 
+            background: linear-gradient(135deg, var(--primary-light), rgba(239, 246, 255, 0.5));
+            transform: scale(1.1);
+        }
+        
+        h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); font-weight: 600; letter-spacing: -0.3px; }
+        .card h3 { font-size: 20px; margin-bottom: 20px; }
+        
+        .tab-pane > h1 { 
+            font-size: 32px; 
+            margin-bottom: 12px; 
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text-main), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .tab-pane > p { font-size: 15px; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <a href="index.php" class="sidebar-logo-link">
+            <div class="logo-icon-wrap">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <span class="logo-text">LockedIn</span>
+        </a>
+        
+        <ul id="tab-menu">
+            <li class="active" onclick="switchTab('overview')" style="display:flex;align-items:center;gap:12px"><i class="fas fa-chart-pie nav-icon"></i> Overview</li>
+            <li onclick="window.location.href='search.php'" style="display:flex;align-items:center;gap:12px"><i class="fas fa-search nav-icon"></i> Search Notes</li>
+            <li onclick="switchTab('my-notes')" style="display:flex;align-items:center;gap:12px"><i class="fas fa-file-alt nav-icon"></i> My Notes</li>
+            <li onclick="switchTab('subjects')" style="display:flex;align-items:center;gap:12px"><i class="fas fa-book nav-icon"></i> Subjects</li>
+            <li onclick="switchTab('bookmarks')" style="display:flex;align-items:center;gap:12px"><i class="fas fa-bookmark nav-icon"></i> Bookmarks</li>
+            <li onclick="switchTab('activity')" style="display:flex;align-items:center;gap:12px"><i class="fas fa-bell nav-icon"></i> Activity</li>
+            <li onclick="switchTab('history')" style="display:flex;align-items:center;gap:12px"><i class="fas fa-history nav-icon"></i> History</li>
+            <li onclick="switchTab('profile')" style="display:flex;align-items:center;gap:12px"><i class="fas fa-user-circle nav-icon"></i> Profile</li>
+        </ul>
+        <button class="logout-btn" onclick="window.location.href='logout.php'" style="display:flex;align-items:center;gap:12px"><i class="fas fa-sign-out-alt nav-icon"></i> Logout</button>
+    </aside>
+
+    <main class="main-content">
+        <div class="header-path"><i class="fas fa-th-large" style="color:var(--primary)"></i> Student Dashboard</div>
+
+        <section id="overview" class="tab-pane active">
+            <div class="welcome-hero">
+                <h1>Welcome back, <?= htmlspecialchars($name) ?>! <i class="fas fa-hand-wave" style="font-size:0.8em"></i></h1>
+                <p>Keep the momentum going — you're doing great this week!</p>
+            </div>
+            
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg, #eff6ff, #dbeafe); color:#3b82f6"><i class="fas fa-file-alt"></i></div>
+                    <div><h3 style="margin:0" id="stat-notes">--</h3><p>Notes Uploaded</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg, #f0f9ff, #e0f2fe); color:#0ea5e9"><i class="fas fa-book-open"></i></div>
+                    <div><h3 style="margin:0" id="stat-subjects">--</h3><p>Subjects Joined</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg, #fef3c7, #fde68a); color:#f59e0b"><i class="fas fa-bookmark"></i></div>
+                    <div><h3 style="margin:0" id="stat-bookmarks">--</h3><p>Bookmarks</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg, #f0fdf4, #dcfce7); color:#22c55e"><i class="fas fa-eye"></i></div>
+                    <div><h3 style="margin:0" id="stat-views">--</h3><p>Total Views</p></div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 28px;">
+                <div class="card">
+                    <h3>Quick Actions</h3>
+                    <div style="display:flex; gap:14px; margin-top:18px;">
+                        <button class="btn-primary" onclick="openUploadModal()"><i class="fas fa-upload"></i> Upload a Note</button>
+                        <button class="btn-primary" style="background:linear-gradient(135deg, #f1f5f9, #e2e8f0); color:var(--text-main); box-shadow: 0 4px 12px rgba(0,0,0,0.08);" onclick="window.location.href='search.php'"><i class="fas fa-search"></i> Search Notes</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Recent Activity</h3>
+                    <div style="margin-top:18px" id="recent-activity-preview">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="my-notes" class="tab-pane">
+            <h1>My Notes</h1>
+            <input type="text" id="search-notes" placeholder="Search your notes..." style="margin: 24px 0; max-width: 400px;">
+            <div class="grid-layout" id="notes-container">
+                <div class="spinner" style="grid-column: 1/-1;"></div>
+            </div>
+        </section>
+
+        <section id="subjects" class="tab-pane">
+            <h1>Subjects</h1>
+            <div class="grid-layout" id="subjects-container">
+                <div class="spinner" style="grid-column: 1/-1;"></div>
+            </div>
+        </section>
+
+        <section id="bookmarks" class="tab-pane">
+            <h1>Bookmarked Notes</h1>
+            <p style="color: var(--text-muted); margin: 12px 0 24px;">Save notes for quick access later</p>
+            <div class="grid-layout" id="bookmarks-container">
+                <div class="spinner" style="grid-column: 1/-1;"></div>
+            </div>
+        </section>
+
+        <section id="activity" class="tab-pane">
+            <h1>Activity Feed</h1>
+            <div class="card" style="margin-top:24px; padding:0;" id="activity-container">
+                <div class="spinner" style="margin: 40px auto;"></div>
+            </div>
+        </section>
+
+        <section id="history" class="tab-pane">
+            <h1>History</h1>
+            <p style="color: var(--text-muted); margin: 12px 0 24px;">Track all your actions and activities</p>
+            <div id="history-container">
+                <div class="spinner"></div>
+            </div>
+        </section>
+
+        <section id="profile" class="tab-pane">
+            <h1>Profile</h1>
+            <div class="card" style="margin-top:24px">
+                <div class="profile-header">
+                    <img src="<?= htmlspecialchars($picture) ?>" class="profile-pic">
+                    <div>
+                        <h2><?= htmlspecialchars($name) ?></h2>
+                        <p style="color:var(--text-muted)"><?= htmlspecialchars($email) ?></p>
+                        <p style="margin-top:8px; font-size:14px; color:var(--primary); font-weight:600; display: inline-block; padding: 6px 14px; background: var(--primary-light); border-radius: 8px;">✨ Active Student</p>
+                    </div>
+                </div>
+                <form method="POST">
+                    <div class="input-group">
+                        <label>Display Name</label>
+                        <input type="text" value="<?= htmlspecialchars($name) ?>" disabled>
+                    </div>
+                    <div class="input-group">
+                        <label>Email</label>
+                        <input type="email" value="<?= htmlspecialchars($email) ?>" disabled>
+                    </div>
+                    <div class="input-group">
+                        <label>Bio / Headline</label>
+                        <textarea name="bio" rows="4"><?= htmlspecialchars($bio) ?></textarea>
+                    </div>
+                    <button type="submit" name="update_bio" class="btn-primary">💾 Save Changes</button>
+                </form>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="card" style="margin-top:24px; border:2px solid #fee2e2; background:linear-gradient(135deg, #fff5f5, #fef2f2);">
+                <h3 style="color:#dc2626; margin-bottom:12px;"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h3>
+                <p style="color:var(--text-muted); font-size:14px; margin-bottom:24px; line-height: 1.6;">
+                    Permanently delete your account. This removes your profile, all uploaded notes, bookmarks, and activity history. <strong style="color:#dc2626">This cannot be undone.</strong>
+                </p>
+                <button onclick="openDeleteModal()" style="background:linear-gradient(135deg, #dc2626, #b91c1c); color:white; border:none; padding:14px 28px; border-radius:12px; font-weight:600; cursor:pointer; font-size:14px; transition:all 0.3s; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);"
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(220, 38, 38, 0.4)'" 
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(220, 38, 38, 0.3)'">
+                    <i class="fas fa-trash-alt"></i> Delete My Account
+                </button>
+            </div>
+        </section>
+
+        <!-- Delete Account Confirmation Modal -->
+        <div id="delete-account-modal" class="modal">
+            <div class="modal-content" style="max-width:460px; border-top:4px solid #dc2626; text-align:center;">
+                <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg, #fef2f2, #fee2e2);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:32px;color:#dc2626;box-shadow: 0 8px 20px rgba(220, 38, 38, 0.2);">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+                <h2 style="color:#dc2626; margin-bottom:12px; font-size:24px;">Delete Account?</h2>
+                <p style="color:var(--text-muted); font-size:14px; line-height:1.8; margin-bottom:28px;">
+                    This will permanently delete your account, all uploaded notes, bookmarks, and activity history.<br><strong style="color:var(--text-main);">This cannot be undone.</strong>
+                </p>
+                <form method="POST" id="delete-account-form">
+                    <input type="hidden" name="delete_account" value="1">
+                    <div style="display:flex; gap:12px;">
+                        <button type="button" onclick="closeDeleteModal()" style="flex:1;padding:14px;border-radius:12px;border:2px solid #e2e8f0;background:white;color:#1e293b;font-weight:600;cursor:pointer;font-size:14px;font-family:inherit;transition:all 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="submit" style="flex:1;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg, #dc2626, #b91c1c);color:white;font-weight:700;cursor:pointer;font-size:14px;font-family:inherit;transition:all 0.3s;box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(220, 38, 38, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(220, 38, 38, 0.3)'">
+                            <i class="fas fa-trash-alt"></i> Delete Everything
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <div id="upload-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📤 Upload Note</h2>
+                <button class="close-btn" onclick="closeUploadModal()">&times;</button>
+            </div>
+            <form id="upload-form" enctype="multipart/form-data">
+                <div class="input-group">
+                    <label>Title *</label>
+                    <input type="text" name="title" required placeholder="e.g., Wave Optics Chapter 10">
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                    <div class="input-group">
+                        <label>Subject *</label>
+                        <select name="subject" required>
+                            <option value="">Select subject</option>
+                            <option>Physics</option>
+                            <option>Chemistry</option>
+                            <option>Math</option>
+                            <option>Computer Science</option>
+                            <option>Biology</option>
+                            <option>Literature</option>
+                            <option>Economics</option>
+                            <option>History</option>
+                            <option>English</option>
+                            <option>Geography</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Grade / Year *</label>
+                        <select name="grade" required>
+                            <option value="">Select grade</option>
+                            <option value="Grade 11">Grade 11</option>
+                            <option value="Grade 12">Grade 12</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="file-upload-area" id="file-drop-area">
+                    <input type="file" name="pdf_file" id="pdf-file" accept=".pdf" style="display: none;" required>
+                    <div class="upload-icon"><i class="fas fa-cloud-upload-alt" style="color:#3b82f6"></i></div>
+                    <p style="font-weight: 600; margin-bottom: 10px; font-size: 15px;">Click to upload or drag and drop</p>
+                    <p style="font-size: 13px; color: var(--text-muted);">PDF files only (Max 10MB)</p>
+                    <p id="file-name" style="margin-top: 14px; color: var(--primary); font-weight: 600;"></p>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%;" id="upload-btn">📤 Upload Note</button>
+                <div id="upload-status" style="margin-top: 14px; text-align: center;"></div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        function openDeleteModal() {
+            document.getElementById('delete-account-modal').classList.add('active');
+        }
+        function closeDeleteModal() {
+            document.getElementById('delete-account-modal').classList.remove('active');
+        }
+    </script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

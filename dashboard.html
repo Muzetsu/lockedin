@@ -370,7 +370,27 @@
         </form>
     </div>
 </div>
+<script>
+(async function() {
+    try {
+        const res = await fetch('https://lockedin.ct.ws/api_data.php?type=me', {
+            credentials: 'include'
+        });
+        if (!res.ok) throw new Error('not authed');
+        const user = await res.json();
+        if (!user || !user.id) throw new Error('no user');
 
+        document.getElementById('userName').textContent = user.name || 'Student';
+        const avatar = document.getElementById('userAvatar');
+        if (avatar && user.picture) {
+            avatar.src = user.picture;
+            avatar.style.display = 'block';
+        }
+    } catch(e) {
+        window.location.replace('https://lockedin.ct.ws/login.php');
+    }
+})();
+</script>
 <script src="dashboard.js"></script>
 </body>
 </html>

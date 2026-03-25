@@ -1,6 +1,6 @@
 // Dashboard JavaScript - Calls InfinityFree backend APIs
 
-const API_BASE = 'https://lockedin.ct.ws';
+const API_BASE = 'https://lockedin.rf.gd';
 const REFRESH_INTERVAL = 30000; // 30 seconds
 
 // Check if user is logged in

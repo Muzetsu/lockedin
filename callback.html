@@ -15,9 +15,7 @@
             min-height: 100vh;
             color: white;
         }
-        .loader {
-            text-align: center;
-        }
+        .loader { text-align: center; }
         .spinner {
             width: 50px;
             height: 50px;
@@ -27,9 +25,7 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
         h2 { font-size: 24px; margin-bottom: 10px; }
         p { font-size: 14px; opacity: 0.9; }
     </style>
@@ -40,21 +36,10 @@
         <h2>Signing you in...</h2>
         <p>Please wait while we complete your login</p>
     </div>
-
     <script>
-        // Get the full URL with query parameters
-        const fullUrl = window.location.href;
-        
-        // Extract everything after the domain (including query params)
-        const searchParams = window.location.search;
-        
-        // Redirect to InfinityFree callback with all parameters
-        const infinityFreeCallback = 'https://lockedin.ct.ws/callback.php' + searchParams;
-        
-        console.log('Redirecting to:', infinityFreeCallback);
-        
-        // Immediate redirect
-        window.location.replace(infinityFreeCallback);
+        // Forward ALL query params (the OAuth code) to callback.php on InfinityFree
+        // callback.php will exchange the code, set the PHP session, then redirect to dashboard.php
+        window.location.replace('https://lockedin.ct.ws/callback.php' + window.location.search);
     </script>
 </body>
 </html>

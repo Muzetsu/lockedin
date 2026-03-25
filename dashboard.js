@@ -1,6 +1,6 @@
 // Dashboard JavaScript - Calls InfinityFree backend APIs
 
-const API_BASE = 'https://lockedin.ct.ws';
+const API_BASE = 'https://lockedin.rf.gd';
 const REFRESH_INTERVAL = 30000; // 30 seconds
 
 // Check if user is logged in
@@ -23,9 +23,10 @@ async function checkAuth() {
         if (data.picture) {
             avatar.src = data.picture;
             avatar.style.display = 'block';
+                    return true;
         }
         
-        return true;
+
     } catch (error) {
         console.error('Auth check failed:', error);
         window.location.href = `${API_BASE}/login.php`;

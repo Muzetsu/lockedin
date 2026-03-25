@@ -1,35 +1,59 @@
-// Dashboard JavaScript - Auto-refresh and dynamic data loading
+// Dashboard JavaScript - Calls InfinityFree backend APIs
 
+const API_BASE = 'https://lockedin.rf.gd';
 const REFRESH_INTERVAL = 30000; // 30 seconds
+
+// Check if user is logged in
+async function checkAuth() {
+    try {
+        const response = await fetch(`${API_BASE}/api_data.php?type=check_auth`, {
+            credentials: 'include'
+        });
+        const data = await response.json();
+        
+        if (!data.logged_in) {
+            // Not logged in, redirect to login
+            window.location.href = `${API_BASE}/login.php`;
+            return false;
+        }
+        
+        // User is logged in, update UI
+        document.getElementById('userName').textContent = data.name || 'User';
+        const avatar = document.getElementById('userAvatar');
+        if (data.picture) {
+            avatar.src = data.picture;
+            avatar.style.display = 'block';
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Auth check failed:', error);
+        window.location.href = `${API_BASE}/login.php`;
+        return false;
+    }
+}
 
 // Tab switching
 function switchTab(tabId) {
+    // Update menu
     const menuItems = document.querySelectorAll('#tab-menu li');
-    menuItems.forEach(li => {
-        li.classList.remove('active');
-        const text = li.innerText.toLowerCase().replace(/[^\w\s]/gi, '').trim().replace(/\s+/g, '-');
-        if(text === tabId) li.classList.add('active');
-    });
-
+    menuItems.forEach(li => li.classList.remove('active'));
+    event.target.closest('li').classList.add('active');
+    
+    // Update panes
     const panes = document.querySelectorAll('.tab-pane');
     panes.forEach(p => p.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
     
+    // Load data for tab
     loadTabData(tabId);
 }
 
 // Load data for specific tab
 function loadTabData(tabId) {
     switch(tabId) {
-        case 'overview':
-            loadStats();
-            loadRecentActivity();
-            break;
         case 'my-notes':
             loadNotes();
-            break;
-        case 'subjects':
-            loadSubjects();
             break;
         case 'bookmarks':
             loadBookmarks();
@@ -37,93 +61,43 @@ function loadTabData(tabId) {
         case 'activity':
             loadActivity();
             break;
-        case 'history':
-            loadHistory();
-            break;
     }
 }
 
 // Load statistics
 async function loadStats() {
     try {
-        const response = await fetch('https://lockedin.rf.gd/api_data.php?type=stats', {
-    credentials: 'include'  // Important for cookies/sessions!
-});
+        const response = await fetch(`${API_BASE}/api_data.php?type=stats`, {
+            credentials: 'include'
+        });
         const data = await response.json();
         
-        const statNotes = document.getElementById('stat-notes');
-        const statSubjects = document.getElementById('stat-subjects');
-        const statHours = document.getElementById('stat-hours');
-        const statViews = document.getElementById('stat-views');
-        
-        if (statNotes) statNotes.textContent = data.notes_uploaded || 0;
-        if (statSubjects) statSubjects.textContent = data.subjects_joined || 0;
-        if (statHours) statHours.textContent = data.study_hours || '0h';
-        if (statViews) statViews.textContent = data.total_views || 0;
+        document.getElementById('stat-notes').textContent = data.notes_uploaded || 0;
+        document.getElementById('stat-subjects').textContent = data.subjects_joined || 0;
+        document.getElementById('stat-hours').textContent = data.study_hours || '0h';
+        document.getElementById('stat-views').textContent = data.total_views || 0;
     } catch (error) {
         console.error('Error loading stats:', error);
     }
 }
 
-// Load recent activity (preview)
-async function loadRecentActivity() {
-    try {
-        const response = await fetch('api_data.php?type=activity');
-        const activities = await response.json();
-        const container = document.getElementById('recent-activity-preview');
-        
-        if (!activities || activities.length === 0) {
-            container.innerHTML = '<p style="font-size:13px; color: var(--text-muted);">No recent activity</p>';
-            return;
-        }
-        
-        container.innerHTML = activities.slice(0, 3).map(act => 
-            `<p style="font-size:13px; margin-bottom:10px; display:flex; align-items:center; gap:8px"><span style="color:var(--primary)">${act.icon}</span>${act.text}</p>`
-        ).join('');
-    } catch (error) {
-        console.error('Error loading recent activity:', error);
-    }
-}
-
-// Load all activity
-async function loadActivity() {
-    try {
-        const response = await fetch('api_data.php?type=activity');
-        const activities = await response.json();
-        const container = document.getElementById('activity-container');
-        
-        if (!activities || activities.length === 0) {
-            container.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><i class="fas fa-inbox" style="font-size:48px;opacity:0.25"></i></div><p>No activity yet</p></div>';
-            return;
-        }
-        
-        container.innerHTML = activities.map(act => `
-            <div class="activity-item">
-                <div class="activity-icon" style="background: ${act.color}; color:white; font-size:16px">${act.icon}</div>
-                <div style="flex:1">
-                    <p style="font-weight:500">${act.text}</p>
-                    <span style="font-size:12px; color:var(--text-muted)">${act.time}</span>
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error('Error loading activity:', error);
-    }
-}
-
 // Load notes
 async function loadNotes() {
+    const container = document.getElementById('notes-container');
+    container.innerHTML = '<div class="spinner"></div>';
+    
     try {
-        const response = await fetch('api_data.php?type=notes');
+        const response = await fetch(`${API_BASE}/api_data.php?type=notes`, {
+            credentials: 'include'
+        });
         const notes = await response.json();
-        const container = document.getElementById('notes-container');
         
         if (!notes || notes.length === 0) {
             container.innerHTML = `
-                <div class="upload-card" onclick="openUploadModal()" style="grid-column: 1/-1;">
-                    <div class="upload-icon"><i class="fas fa-cloud-upload-alt" style="color:#3b82f6"></i></div>
+                <div class="upload-card" onclick="openUploadModal()">
+                    <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
                     <h3>Upload Your First Note</h3>
-                    <p style="color: var(--text-muted); margin-top: 8px;">Share your knowledge with others</p>
+                    <p style="color: var(--text-muted); margin-top: 8px;">Share your knowledge with the community</p>
                 </div>
             `;
             return;
@@ -131,118 +105,111 @@ async function loadNotes() {
         
         container.innerHTML = notes.map(note => `
             <div class="note-card">
-                <span style="background:#eff6ff; color:#3b82f6; padding:4px 8px; border-radius:5px; font-size:11px;">${note.subject}</span>
-                <h3 style="margin-top:10px">${note.title}</h3>
-                <p style="font-size:12px; color:var(--text-muted); margin:10px 0;">${note.formatted_date} • 👁 ${note.views}</p>
+                <span style="background: var(--primary-light); color: var(--primary); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase;">${esc(note.subject)}</span>
+                <h3 style="margin-top: 12px;">${esc(note.title)}</h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+                    ${note.formatted_date || ''} • 👁 ${note.views || 0} views
+                </p>
                 <div class="note-actions">
-                    <span onclick="downloadNote('${note.file_path}')" title="View / Download" style="color:#3b82f6"><i class="fas fa-eye"></i></span>
-                    <span onclick="deleteNote(${note.id})" title="Delete" style="color:#dc2626"><i class="fas fa-trash-alt"></i></span>
+                    <button onclick="viewNote('${esc(note.file_path)}')">
+                        <i class="fas fa-eye"></i> View
+                    </button>
+                    <button onclick="deleteNote(${note.id})" style="color: #dc2626;">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
                 </div>
             </div>
         `).join('') + `
             <div class="upload-card" onclick="openUploadModal()">
-                <div class="upload-icon"><i class="fas fa-plus-circle" style="color:#3b82f6"></i></div>
+                <div class="upload-icon"><i class="fas fa-plus-circle"></i></div>
                 <h3>Upload New Note</h3>
             </div>
         `;
     } catch (error) {
         console.error('Error loading notes:', error);
-    }
-}
-
-// Load subjects
-async function loadSubjects() {
-    try {
-        const response = await fetch('api_data.php?type=subjects');
-        const subjects = await response.json();
-        const container = document.getElementById('subjects-container');
-        
-        // FA icon map for subjects
-        const iconMap = {
-            'Physics':          { icon: 'fa-bolt',         bg: '#eff6ff', color: '#3b82f6' },
-            'Chemistry':        { icon: 'fa-flask',        bg: '#fdf4ff', color: '#a855f7' },
-            'Math':             { icon: 'fa-square-root-alt', bg: '#fef3c7', color: '#f59e0b' },
-            'Computer Science': { icon: 'fa-laptop-code',  bg: '#f0fdf4', color: '#22c55e' },
-            'Biology':          { icon: 'fa-dna',          bg: '#ecfdf5', color: '#10b981' },
-            'Literature':       { icon: 'fa-book-open',    bg: '#fff7ed', color: '#f97316' },
-            'Economics':        { icon: 'fa-chart-line',   bg: '#f0fdf4', color: '#16a34a' },
-            'History':          { icon: 'fa-landmark',     bg: '#fef9c3', color: '#ca8a04' },
-            'English':          { icon: 'fa-spell-check',  bg: '#eff6ff', color: '#2563eb' },
-            'Geography':        { icon: 'fa-globe',        bg: '#ecfdf5', color: '#059669' },
-        };
-        const def = { icon: 'fa-book', bg: '#f1f5f9', color: '#64748b' };
-
-        container.innerHTML = subjects.map(sub => {
-            const m = iconMap[sub.name] || def;
-            return `
-                <div class="sub-card" style="cursor:pointer;" onclick="window.location.href='search.php?subject='+encodeURIComponent('${sub.name}')">
-                    <div class="sub-icon-wrap" style="background:${m.bg}; color:${m.color}">
-                        <i class="fas ${m.icon}"></i>
-                    </div>
-                    <h3>${sub.name}</h3>
-                    <p style="font-size:13px; color:var(--text-muted)">${sub.user_notes} your notes &bull; ${sub.total_notes} total</p>
-                    <span style="display:inline-flex;align-items:center;gap:5px;margin-top:10px;font-size:12px;font-weight:600;color:#3b82f6;"><i class="fas fa-arrow-right"></i> Browse notes</span>
-                </div>
-            `;
-        }).join('');
-    } catch (error) {
-        console.error('Error loading subjects:', error);
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Could not load notes</p></div>';
     }
 }
 
 // Load bookmarks
 async function loadBookmarks() {
+    const container = document.getElementById('bookmarks-container');
+    container.innerHTML = '<div class="spinner"></div>';
+    
     try {
-        const response = await fetch('api_data.php?type=bookmarks');
+        const response = await fetch(`${API_BASE}/api_data.php?type=bookmarks`, {
+            credentials: 'include'
+        });
         const bookmarks = await response.json();
-        const container = document.getElementById('bookmarks-container');
         
         if (!bookmarks || bookmarks.length === 0) {
-            container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="empty-state-icon"><i class="fas fa-bookmark" style="font-size:48px;opacity:0.25"></i></div><p>No bookmarks yet</p><p style="font-size: 14px; margin-top: 8px;">Bookmark notes to save them for later</p></div>';
+            container.innerHTML = `
+                <div class="empty-state" style="grid-column: 1/-1;">
+                    <i class="fas fa-bookmark"></i>
+                    <p>No bookmarks yet</p>
+                    <p style="font-size: 14px; margin-top: 8px;">Browse notes and bookmark your favorites</p>
+                </div>
+            `;
             return;
         }
         
         container.innerHTML = bookmarks.map(note => `
             <div class="note-card">
-                <span style="background:#fef3c7; color:#d97706; padding:4px 8px; border-radius:5px; font-size:11px;">${note.subject}</span>
-                <h3 style="margin-top:10px">${note.title}</h3>
-                <p style="font-size:12px; color:var(--text-muted); margin:10px 0;">By ${note.uploader_name}</p>
-                <p style="font-size:11px; color:var(--text-muted);">Bookmarked: ${note.bookmarked_date}</p>
+                <span style="background: #fef3c7; color: #d97706; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase;">${esc(note.subject)}</span>
+                <h3 style="margin-top: 12px;">${esc(note.title)}</h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+                    By ${esc(note.uploader_name || 'Anonymous')}
+                </p>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                    Bookmarked: ${note.bookmarked_date || ''}
+                </p>
                 <div class="note-actions">
-                    <span onclick="downloadNote('${note.file_path}')" title="View / Download" style="color:#3b82f6"><i class="fas fa-eye"></i></span>
+                    <button onclick="viewNote('${esc(note.file_path)}')">
+                        <i class="fas fa-eye"></i> View
+                    </button>
                 </div>
             </div>
         `).join('');
     } catch (error) {
         console.error('Error loading bookmarks:', error);
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Could not load bookmarks</p></div>';
     }
 }
 
-// Load history
-async function loadHistory() {
+// Load activity
+async function loadActivity() {
+    const container = document.getElementById('activity-container');
+    container.innerHTML = '<div class="spinner"></div>';
+    
     try {
-        const response = await fetch('api_data.php?type=history');
-        const history = await response.json();
-        const container = document.getElementById('history-container');
+        const response = await fetch(`${API_BASE}/api_data.php?type=activity`, {
+            credentials: 'include'
+        });
+        const activities = await response.json();
         
-        if (!history || history.length === 0) {
-            container.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><i class="fas fa-history" style="font-size:48px;opacity:0.25"></i></div><p>No history yet</p></div>';
+        if (!activities || activities.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No activity yet</p></div>';
             return;
         }
         
-        container.innerHTML = history.map(item => `
-            <div class="history-item">
-                <strong>${item.action_type.replace('_', ' ').toUpperCase()}</strong>
-                <p style="margin-top: 4px;">${item.description}</p>
-                <div class="history-time">${item.full_time} (${item.time})</div>
+        container.innerHTML = activities.map(act => `
+            <div style="background: white; border: 2px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 16px;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: ${act.color || 'var(--primary)'}; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                    ${act.icon || '📝'}
+                </div>
+                <div style="flex: 1;">
+                    <p style="font-weight: 600; margin-bottom: 4px;">${act.text}</p>
+                    <span style="font-size: 12px; color: var(--text-muted);">${act.time || ''}</span>
+                </div>
             </div>
         `).join('');
     } catch (error) {
-        console.error('Error loading history:', error);
+        console.error('Error loading activity:', error);
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Could not load activity</p></div>';
     }
 }
 
-// Upload Modal Functions
+// Upload modal functions
 function openUploadModal() {
     document.getElementById('upload-modal').classList.add('active');
 }
@@ -269,13 +236,11 @@ fileInput.addEventListener('change', (e) => {
 
 // Drag and drop
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    fileDropArea.addEventListener(eventName, preventDefaults, false);
+    fileDropArea.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
 });
-
-function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-}
 
 ['dragenter', 'dragover'].forEach(eventName => {
     fileDropArea.addEventListener(eventName, () => {
@@ -290,61 +255,47 @@ function preventDefaults(e) {
 });
 
 fileDropArea.addEventListener('drop', (e) => {
-    const dt = e.dataTransfer;
-    const files = dt.files;
+    const files = e.dataTransfer.files;
     fileInput.files = files;
     if (files.length > 0) {
         fileName.textContent = `Selected: ${files[0].name}`;
     }
 });
 
-// Handle form submission - FIXED VERSION
+// Handle form submission
 document.getElementById('upload-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    console.log('Form submitted');
-    
     const uploadBtn = document.getElementById('upload-btn');
     const uploadStatus = document.getElementById('upload-status');
-    const fileInput = document.getElementById('pdf-file');
+    const fileInputEl = document.getElementById('pdf-file');
     
-    // Check if file is selected
-    if (!fileInput.files || fileInput.files.length === 0) {
-        uploadStatus.innerHTML = '<p style="color: #dc2626;">✗ Please select a PDF file</p>';
+    if (!fileInputEl.files || fileInputEl.files.length === 0) {
+        uploadStatus.innerHTML = '<p style="color: #dc2626; margin-top: 12px;">✗ Please select a PDF file</p>';
         return;
     }
     
-    console.log('File selected:', fileInput.files[0].name);
-    
-    // Create FormData and append fields
     const formData = new FormData();
-    formData.append('title',   document.querySelector('input[name="title"]').value);
+    formData.append('title', document.querySelector('input[name="title"]').value);
     formData.append('subject', document.querySelector('select[name="subject"]').value);
-    formData.append('grade',   document.querySelector('select[name="grade"]').value);
-    formData.append('pdf_file', fileInput.files[0]); // KEY FIX: Make sure key is 'pdf_file'
-    
-    console.log('FormData created');
+    formData.append('grade', document.querySelector('select[name="grade"]').value);
+    formData.append('pdf_file', fileInputEl.files[0]);
     
     uploadBtn.disabled = true;
     uploadBtn.textContent = 'Uploading...';
     uploadStatus.innerHTML = '<div class="spinner"></div>';
     
     try {
-        console.log('Sending request to upload_note.php');
-        
-        const response = await fetch('upload_note.php', {
+        const response = await fetch(`${API_BASE}/upload_note.php`, {
             method: 'POST',
-            body: formData
-            // Don't set Content-Type - browser sets it automatically with boundary
+            body: formData,
+            credentials: 'include'
         });
         
-        console.log('Response status:', response.status);
-        
         const result = await response.json();
-        console.log('Response:', result);
         
         if (result.success) {
-            uploadStatus.innerHTML = '<p style="color: #22c55e;">✓ Upload successful!</p>';
+            uploadStatus.innerHTML = '<p style="color: #22c55e; margin-top: 12px;">✓ Upload successful!</p>';
             setTimeout(() => {
                 closeUploadModal();
                 loadNotes();
@@ -352,23 +303,20 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
                 loadActivity();
             }, 1500);
         } else {
-            uploadStatus.innerHTML = `<p style="color: #dc2626;">✗ ${result.error}</p>`;
-            if (result.debug) {
-                console.error('Debug info:', result.debug);
-            }
+            uploadStatus.innerHTML = `<p style="color: #dc2626; margin-top: 12px;">✗ ${result.error || 'Upload failed'}</p>`;
             uploadBtn.disabled = false;
-            uploadBtn.textContent = 'Upload Note';
+            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Note';
         }
     } catch (error) {
         console.error('Upload error:', error);
-        uploadStatus.innerHTML = '<p style="color: #dc2626;">✗ Upload failed</p>';
+        uploadStatus.innerHTML = '<p style="color: #dc2626; margin-top: 12px;">✗ Upload failed</p>';
         uploadBtn.disabled = false;
-        uploadBtn.textContent = 'Upload Note';
+        uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Note';
     }
 });
 
 // Note actions
-function downloadNote(filePath) {
+function viewNote(filePath) {
     window.open(filePath, '_blank');
 }
 
@@ -378,27 +326,22 @@ async function deleteNote(noteId) {
     }
     
     try {
-        const response = await fetch('delete_note.php', {
+        const response = await fetch(`${API_BASE}/delete_note.php`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ note_id: noteId })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ note_id: noteId }),
+            credentials: 'include'
         });
         
         const result = await response.json();
         
         if (result.success) {
-            // Show success message
             alert('✓ Note deleted successfully!');
-            
-            // Reload notes, stats, and activity
             loadNotes();
             loadStats();
             loadActivity();
-            loadHistory();
         } else {
-            alert('✗ Failed to delete note: ' + result.error);
+            alert('✗ Failed to delete note: ' + (result.error || 'Unknown error'));
         }
     } catch (error) {
         console.error('Delete error:', error);
@@ -406,15 +349,40 @@ async function deleteNote(noteId) {
     }
 }
 
-// Wait for DOM to be ready before initializing
-document.addEventListener('DOMContentLoaded', function() {
-    // Initial load
-    loadStats();
-    loadRecentActivity();
+// Logout
+document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+    e.preventDefault();
     
-    // Auto-refresh data every 30 seconds
+    try {
+        await fetch(`${API_BASE}/logout.php`, { credentials: 'include' });
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Logout error:', error);
+        window.location.href = 'index.html';
+    }
+});
+
+// Utility function
+function esc(str) {
+    const d = document.createElement('div');
+    d.textContent = String(str);
+    return d.innerHTML;
+}
+
+// Initialize dashboard
+async function init() {
+    const isLoggedIn = await checkAuth();
+    if (!isLoggedIn) return;
+    
+    // Load initial data
+    loadStats();
+    loadNotes();
+    
+    // Auto-refresh stats
     setInterval(() => {
         loadStats();
-        loadRecentActivity();
     }, REFRESH_INTERVAL);
-});
+}
+
+// Start when page loads
+document.addEventListener('DOMContentLoaded', init);
